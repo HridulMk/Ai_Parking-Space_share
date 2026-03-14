@@ -1,0 +1,109 @@
+############################
+# Python / Django
+############################
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Django database
+db.sqlite3
+*.sqlite3
+
+# Django logs
+*.log
+
+# Media uploads
+media/
+
+# Environment variables
+.env
+
+############################
+# Virtual Environments
+############################
+
+venv/
+env/
+backend/venv/
+frontend/venv/
+
+############################
+# Python Packaging
+############################
+
+build/
+dist/
+*.egg-info/
+.eggs/
+
+############################
+# IDE / Editor
+############################
+
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+############################
+# OS Files
+############################
+
+.DS_Store
+Thumbs.db
+
+############################
+# Flutter
+############################
+
+frontend/.dart_tool/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.metadata
+
+frontend/build/
+frontend/.pub-cache/
+
+# Android build
+frontend/android/.gradle/
+frontend/android/app/build/
+
+# iOS build
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/App.framework
+
+############################
+# Node (sometimes Flutter tools)
+############################
+
+node_modules/
+
+############################
+# Temporary files
+############################
+
+*.tmp
+*.swp
+*.bak
+
+############################
+# YOLO / AI outputs
+############################
+
+*.pt
+runs/
+output/
+detections/
+
+############################
+# Misc
+############################
+
+coverage/
+*.coverage
