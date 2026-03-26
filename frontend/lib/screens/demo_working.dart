@@ -5,6 +5,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:video_player/video_player.dart';
 import 'dart:ui';
 
@@ -456,11 +458,59 @@ for (var s in slotData) {
             ],
           ),
           const SizedBox(height: 12),
-          _buildTextField(_mapController, 'Google Map Link (optional)', Icons.map),
+          _buildLocationSection(),
         ],
       ),
     );
   }
+
+  Widget _buildLocationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Location', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13)),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _pickLocationOnMap,
+            icon: const Icon(Icons.map),
+            label: Text(_pickedLatLng == null ? 'Pick Location on Map' : 'Location Picked ✓ (tap to change)'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _pickedLatLng == null ? Colors.cyan[700] : Colors.green[700],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+        if (_pickedLatLng != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Lat: ${_pickedLatLng!.latitude.toStringAsFixed(6)}, Lng: ${_pickedLatLng!.longitude.toStringAsFixed(6)}',
+            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+          ),
+        ],
+        const SizedBox(height: 12),
+        _buildTextField(_mapController, 'Or paste Google Maps link', Icons.link),
+      ],
+    );
+  }
+
+  Future<void> _pickLocationOnMap() async {
+    final result = await Navigator.of(context).push<ll.LatLng>(
+      MaterialPageRoute(builder: (_) => _LocationPickerScreen(initial: _pickedLatLng)),
+    );
+    if (result != null) {
+      setState(() {
+        _pickedLatLng = result;
+        _locationController.text = '${result.latitude.toStringAsFixed(6)}, ${result.longitude.toStringAsFixed(6)}';
+        _mapController.text = 'https://www.google.com/maps?q=${result.latitude},${result.longitude}';
+      });
+    }
+  }
+
+  ll.LatLng? _pickedLatLng;
 
   Widget _buildTextField(TextEditingController controller, String label, IconData icon, {TextInputType? keyboardType}) {
     return TextField(
@@ -894,6 +944,120 @@ for (var s in slotData) {
               fontSize: 12,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocationPickerScreen extends StatefulWidget {
+  final ll.LatLng? initial;
+  const _LocationPickerScreen({this.initial});
+
+  @override
+  State<_LocationPickerScreen> createState() => _LocationPickerScreenState();
+}
+
+class _LocationPickerScreenState extends State<_LocationPickerScreen> {
+  ll.LatLng? _picked;
+  late final MapController _mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+    _picked = widget.initial;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final center = _picked ?? const ll.LatLng(3.1390, 101.6869);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pick Location'),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
+        actions: [
+          if (_picked != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context, _picked),
+              child: const Text('Confirm', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: center,
+              initialZoom: 13,
+              onTap: (_, latlng) => setState(() => _picked = latlng),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.parking_app',
+              ),
+              if (_picked != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _picked!,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: Column(
+              children: [
+                if (_picked != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Lat: ${_picked!.latitude.toStringAsFixed(6)}, Lng: ${_picked!.longitude.toStringAsFixed(6)}',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _picked == null ? null : () => Navigator.pop(context, _picked),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyan[600],
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Confirm Location', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 12,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                child: const Text('Tap on the map to pin the parking location', style: TextStyle(color: Colors.white, fontSize: 13)),
+              ),
+            ),
           ),
         ],
       ),

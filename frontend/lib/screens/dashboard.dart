@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/parking_slot.dart';
 import '../services/auth_service.dart';
 import '../services/parking_service.dart';
+import 'live_location_screen.dart';
 import 'welcome.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -191,11 +192,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Container(
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const LiveLocationScreen()),
+                      ),
+                      child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
                         color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
@@ -214,8 +219,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ],
                             ),
                           ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white30, size: 16),
                         ],
                       ),
+                    ),
                     ),
                     const SizedBox(height: 14),
                     Wrap(

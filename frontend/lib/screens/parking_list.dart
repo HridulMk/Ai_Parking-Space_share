@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/parking_slot.dart';
@@ -105,9 +106,23 @@ class _ParkingListScreenState extends State<ParkingListScreen> {
                                 '${space['location'] ?? space['address'] ?? 'No location'}\nSlots: ${space['total_slots'] ?? 0}',
                               ),
                               isThreeLine: true,
-                              trailing: ElevatedButton(
-                                onPressed: isActive ? () => _showSlotsForSpace(space) : null,
-                                child: Text(isActive ? 'View Slots' : 'Inactive'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if ((space['google_map_link'] ?? '').toString().isNotEmpty)
+                                    IconButton(
+                                      icon: const Icon(Icons.map, color: Colors.blue),
+                                      tooltip: 'Open in Google Maps',
+                                      onPressed: () => launchUrl(
+                                        Uri.parse(space['google_map_link'].toString()),
+                                        mode: LaunchMode.externalApplication,
+                                      ),
+                                    ),
+                                  ElevatedButton(
+                                    onPressed: isActive ? () => _showSlotsForSpace(space) : null,
+                                    child: Text(isActive ? 'View Slots' : 'Inactive'),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -264,6 +279,12 @@ class _SpaceSlotsBottomSheetState extends State<_SpaceSlotsBottomSheet> {
         ListTile(
           title: Text(widget.space['name']?.toString() ?? 'Parking Space'),
           subtitle: Text(widget.space['location']?.toString() ?? widget.space['address']?.toString() ?? ''),
+          onTap: (widget.space['google_map_link'] ?? '').toString().isNotEmpty
+              ? () => launchUrl(
+                    Uri.parse(widget.space['google_map_link'].toString()),
+                    mode: LaunchMode.externalApplication,
+                  )
+              : null,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

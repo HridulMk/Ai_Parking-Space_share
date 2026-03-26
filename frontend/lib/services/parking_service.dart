@@ -145,6 +145,28 @@ class ParkingService {
     }
   }
 
+  static Future<Map<String, dynamic>> updateParkingSpace({
+    required int spaceId,
+    String? openTime,
+    String? closeTime,
+    String? name,
+    String? location,
+    String? googleMapLink,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (openTime != null) body['open_time'] = openTime;
+      if (closeTime != null) body['close_time'] = closeTime;
+      if (name != null) body['name'] = name;
+      if (location != null) body['location'] = location;
+      if (googleMapLink != null) body['google_map_link'] = googleMapLink;
+      final response = await ApiService.patch('spaces/$spaceId/', auth: true, body: body);
+      return {'success': true, 'space': response};
+    } catch (e) {
+      return {'success': false, 'error': e.toString().replaceFirst('Exception: ', '')};
+    }
+  }
+
   static Future<Map<String, dynamic>> createParkingSpace({
     required String name,
     required int numberOfSlots,

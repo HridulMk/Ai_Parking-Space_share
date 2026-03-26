@@ -8,6 +8,9 @@ import 'my_bookings.dart';
 import 'dashboard.dart';
 import 'home.dart';
 import 'parking_list.dart';
+import 'add_space_screen.dart';
+import 'manage_pricing_screen.dart';
+import 'vendor_reports_screen.dart';
 
 
 class VendorHomeScreen extends StatefulWidget {
@@ -138,11 +141,39 @@ class _VendorHomeContent extends StatelessWidget {
             const SizedBox(height: 24),
             const Text('Quick Actions', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            _ActionCard(icon: Icons.add_circle_outline, title: 'Add New Space', subtitle: 'Add parking spaces to your inventory', onTap: () {}),
+            _ActionCard(
+              icon: Icons.add_circle_outline,
+              title: 'Add New Space',
+              subtitle: 'Add parking spaces to your inventory',
+              onTap: () async {
+                final added = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(builder: (_) => const AddSpaceScreen()),
+                );
+                if (added == true && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Space added successfully!'), backgroundColor: Colors.green),
+                  );
+                }
+              },
+            ),
             const SizedBox(height: 10),
-            _ActionCard(icon: Icons.edit_note, title: 'Manage Pricing', subtitle: 'Update rates for your spaces', onTap: () {}),
+            _ActionCard(
+              icon: Icons.edit_note,
+              title: 'Manage Pricing',
+              subtitle: 'Update rates for your spaces',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ManagePricingScreen()),
+              ),
+            ),
             const SizedBox(height: 10),
-            _ActionCard(icon: Icons.bar_chart, title: 'View Reports', subtitle: 'Check occupancy and revenue analytics', onTap: () {}),
+            _ActionCard(
+              icon: Icons.bar_chart,
+              title: 'View Reports',
+              subtitle: 'Check occupancy and revenue analytics',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const VendorReportsScreen()),
+              ),
+            ),
             if (!isBackendConnected) ...[
               const SizedBox(height: 16),
               Container(
