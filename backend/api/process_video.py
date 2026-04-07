@@ -55,8 +55,9 @@ def process_video(session_id: str, model=None) -> Dict[str, Any]:
         return {"success": False, "error": "Polygons not found"}
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"output_{session_id}_{timestamp}.avi"  # Use .avi for XVID
+    output_filename = f"output_{session_id}_{timestamp}.mp4"
     output_path = os.path.join(session_dir, output_filename)
+    temp_path = output_path.replace('.mp4', '_tmp.avi')
 
     print("🎥 Input:", input_path)
     print("📐 Polygons:", polygons_path)
@@ -76,21 +77,8 @@ def process_video(session_id: str, model=None) -> Dict[str, Any]:
     frame_w, frame_h = 1020, 500
     polygons = _load_polygons(polygons_path)
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # XVID codec for better compatibility
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (frame_w, frame_h))
-
-    if not out.isOpened():
-        # Fallback to MJPG if XVID fails
-        output_path = output_path.replace('.avi', '.avi')  # Keep .avi
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        out = cv2.VideoWriter(output_path, fourcc, 20.0, (frame_w, frame_h))
-
-    if not out.isOpened():
-        # Final fallback to mp4v with .mp4 extension
-        output_path = output_path.replace('.avi', '.mp4')
-        output_filename = output_filename.replace('.avi', '.mp4')
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_path, fourcc, 20.0, (frame_w, frame_h))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(temp_path, fourcc, 20.0, (frame_w, frame_h))
 
     if not out.isOpened():
         cap.release()
@@ -149,7 +137,26 @@ def process_video(session_id: str, model=None) -> Dict[str, Any]:
     cap.release()
     out.release()
 
-    # Verify output file was created
+    if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+        return {"success": False, "error": "Temp video file was not created"}
+
+    # Re-encode to H.264 MP4 for browser compatibility
+    try:
+        import imageio_ffmpeg
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        import subprocess
+        subprocess.run(
+            [ffmpeg_exe, '-y', '-i', temp_path,
+             '-vcodec', 'libx264', '-pix_fmt', 'yuv420p',
+             '-movflags', '+faststart', output_path],
+            check=True, capture_output=True
+        )
+    except Exception as e:
+        return {"success": False, "error": f"ffmpeg re-encode failed: {e}"}
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
     if not os.path.exists(output_path):
         return {"success": False, "error": "Output video file was not created"}
 
